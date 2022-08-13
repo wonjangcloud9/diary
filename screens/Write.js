@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import styled from "styled-components/native";
+import { useDB } from "../context";
 import colors from "../colors";
 
 const View = styled.View`
@@ -55,17 +56,26 @@ const EmotionText = styled.Text`
   font-size: 24px;
 `;
 
-const emotions = ["🤯", "🥲", "🤬", "🤗", "🥰"];
+const emotions = ["🤯", "🥲", "🤬", "🤗", "🥰", "😊", "🤩"];
 
-const Write = () => {
+const Write = ({ navigation: { goBack } }) => {
+  const realm = useDB();
   const [selectedEmotion, setEmotion] = useState(null);
   const [feelings, setFeelings] = useState("");
   const onChangeText = (text) => setFeelings(text);
   const onEmotionPress = (face) => setEmotion(face);
   const onSubmit = () => {
-    if (feelings === "" || selectedEmotion === null) {
+    if (feelings === "" || selectedEmotion == null) {
       return Alert.alert("Please complete form.");
     }
+    realm.write(() => {
+      realm.create("Feeling", {
+        _id: Date.now(),
+        emotion: selectedEmotion,
+        message: feelings,
+      });
+    });
+    goBack();
   };
   return (
     <View>
@@ -82,7 +92,7 @@ const Write = () => {
         ))}
       </Emotions>
       <TextInput
-        returnKeyLabel="done"
+        returnKeyType="done"
         onSubmitEditing={onSubmit}
         onChangeText={onChangeText}
         value={feelings}
